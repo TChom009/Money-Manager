@@ -27,6 +27,7 @@ filemenu.add_command(label='Export to Googlesheet')
 
 # Help
 def About():
+	print('About Menu')
 	messagebox.showinfo('About','Take Control of Your Money\nLets Track!')
 
 helpmenu = Menu(menubar,tearoff=0)
