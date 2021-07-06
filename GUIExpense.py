@@ -8,7 +8,18 @@ from datetime import datetime # ttk is theme of Tk
 
 GUI = Tk() # สร้าง GUI ขึ้นแล้วดึงฟังก์ชันของ Tk() T capital, k lowercap
 GUI.title('Daily Budget & Expense Tracker by Bluvoyage')
-GUI.geometry('900x800+250+200') # กำหนดขนาดของหน้าต่าง
+# GUI.geometry('700x620+400+100') # กำหนดขนาดของหน้าต่าง
+
+w = 650
+h = 700
+
+ws = GUI.winfo_screenwidth() # screen width
+hs = GUI.winfo_screenwidth() # screen height
+
+x = (ws/2) - (w/2) # คำนวณหา center
+y = (hs/2) - (h/2) - 300
+
+GUI.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}') # calculate center by f format
 
 # B1 = Button(GUI,text='Hello')
 # B1.pack(ipadx=50, ipady=20)
@@ -111,7 +122,7 @@ def Save(event=None):
 		print(today)
 		stamp = datetime.now()
 		dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
-		transectionid = stamp.strftime('%Y%m%d%H%M%f')
+		transectionid = stamp.strftime('%Y%m%d%H%M%f') # stamp เพื่อใช้ในการ reference
 		dt = days[today] + '-' + dt
 		with open('savedata.csv','a',encoding='utf-8',newline='') as f:
 			# with คือคำสั่งเปิดไฟล์แล้วปิดอัตโนมัติ
@@ -148,7 +159,7 @@ mainicon.pack()
 
 
 #----------text1-----------
-L = Label(F1,text='List of Expenses',font=FONT1).pack()
+L = ttk.Label(F1,text='List of Expenses',font=FONT1).pack()
 v_expense = StringVar()
 # StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
 E1 = ttk.Entry(F1,textvariable=v_expense,font=FONT1)
@@ -156,7 +167,7 @@ E1.pack()
 #--------------------------
 
 #----------text2-----------
-L = Label(F1,text='Price (THB)',font=FONT1).pack()
+L = ttk.Label(F1,text='Price (THB)',font=FONT1).pack()
 v_price = StringVar()
 # StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
 E2 = ttk.Entry(F1,textvariable=v_price,font=FONT1)
@@ -164,7 +175,7 @@ E2.pack()
 #-------------------------
 
 #----------text3----------
-L = Label(F1,text='Quantity',font=FONT1).pack()
+L = ttk.Label(F1,text='Quantity',font=FONT1).pack()
 v_quantity = StringVar()
 # StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
 E3 = ttk.Entry(F1,textvariable=v_quantity,font=FONT1)
@@ -231,7 +242,7 @@ resulttable.pack()
 for h in header:
 	resulttable.heading(h,text=h)
 
-headerwidth = [175,230,120,90,70,90] #การปรับความกว้างของแต่ละ column
+headerwidth = [170,210,100,50,50,60] #การปรับความกว้างของแต่ละ column
 for h,w in zip(header,headerwidth):
 	resulttable.column(h,width=w)
 	
@@ -267,13 +278,13 @@ def DeleteRecord(event=None):
 		del alltransection[str(transectionid)] # delete data in dict
 		# print(alltransection)
 		UpdateCSV()
-		update_table()
+		update_table() # อัพเดทอีกครั้งเพื่อให้ข้อมูลโชว์ค่าขึ้น
 
 	else:
 		print('cancel')
 
 BDelete = ttk.Button(T2,text='Delete',command=DeleteRecord)
-BDelete.place(x=50,y=520)
+BDelete.place(x=50,y=490)
 
 resulttable.bind('<Delete>',DeleteRecord) 
 
@@ -299,6 +310,99 @@ def update_table():
 # resulttable.heading(header[2],text=header[2])
 # resulttable.heading(header[3],text=header[3])
 # resulttable.heading(header[4],text=header[4])
+
+
+###############Right Click Menu##################
+
+def EditRecord():
+	POPUP = Toplevel() # คล้ายกับ Tk ประกาศเพื่อเปิดหน้าต่างอีกอันหนึ่งเพื่อ edit
+	POPUP.title('Edit Record')
+	# POPUP.geometry('350x300')
+
+	# คำสั่ง center หน้าต่างของ right click - Edit
+	w = 350
+	h = 300
+
+	ws = POPUP.winfo_screenwidth() # screen width
+	hs = POPUP.winfo_screenwidth() # screen height
+
+	x = (ws/2) - (w/2) # คำนวณหา center
+	y = (hs/2) - (h/2) - 300
+
+	POPUP.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
+
+	#---------text1-----------
+
+	L = ttk.Label(POPUP,text='List of Expenses',font=FONT1).pack()
+	v_expense = StringVar()
+	# StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
+	E1 = ttk.Entry(POPUP,textvariable=v_expense,font=FONT1)
+	E1.pack()
+	#--------------------------
+
+	#----------text2-----------
+	L = ttk.Label(POPUP,text='Price (THB)',font=FONT1).pack()
+	v_price = StringVar()
+	# StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
+	E2 = ttk.Entry(POPUP,textvariable=v_price,font=FONT1)
+	E2.pack()
+	#-------------------------
+
+	#----------text3----------
+	L = ttk.Label(POPUP,text='Quantity',font=FONT1).pack()
+	v_quantity = StringVar()
+	# StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
+	E3 = ttk.Entry(POPUP,textvariable=v_quantity,font=FONT1)
+	E3.pack()
+	#-------------------------
+
+	def Edit():
+		# print(transectionid)
+		# print(alltransection)
+		olddata = alltransection[str(transectionid)]
+		print('OLD:',olddata)
+		v1 = v_expense.get()
+		v2 = float(v_price.get())
+		v3 = float(v_quantity.get())
+		total = v2 * v3
+		newdata = [olddata[0],olddata[1],v1,v2,v3,total]
+		alltransection[str(transectionid)] = newdata
+		UpdateCSV()
+		update_table() # อัพเดทอีกครั้งเพื่อให้ข้อมูลโชว์ค่าขึ้น
+		POPUP.destroy() # สั่งปิดPOPUPเมื่อใ ช้งาน/editเสร็จ
+
+	icon_b1 = PhotoImage(file='b_save.png')
+
+	B2 = ttk.Button(POPUP,text=f'{"Save": >{10}}', image=icon_b1, compound='left',command=Save)
+	B2.pack(ipadx=5, ipady=5, pady=15)
+
+	# get data in selected record
+	select = resulttable.selection()
+	print(select)
+	data = resulttable.item(select)
+	data = data['values']
+	print(data)
+	transectionid = data[0]
+
+	# for showing old data
+	v_expense.set(data[2])
+	v_price.set(data[3])
+	v_quantity.set(data[4])
+
+	POPUP.mainloop()
+
+rightclick = Menu(GUI,tearoff=0) # teaoff ไม่ให้ดึงค่าออกมาได้
+rightclick.add_command(label='Edit',command=EditRecord)
+rightclick.add_command(label='Delete',command=DeleteRecord)
+rightclick.add_command(label='Copy')
+rightclick.add_command(label='Past')
+
+def menupopup(event):
+	# print(event.x_root, event.y_root) # บอกตำแหน่งเมื่อคลิกขวา
+	rightclick.post(event.x_root,event.y_root)
+
+resulttable.bind('<Button-2>', menupopup)
+
 
 update_table()
 print('GET CHILD:',resulttable.get_children())
