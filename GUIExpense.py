@@ -6,6 +6,43 @@ import csv
 from datetime import datetime # ttk is theme of Tk
 # command+B สั่งให้ run program 
 
+###########DATABASE###################
+import sqlite3 
+
+# สร้าง database
+conn = sqlite3.connect('expense.sqlite3')
+# สร้างตัวดำเนินการ (อยากได้อะไรใช้ตัวนี้ได้เลย)
+c = conn.cursor()
+
+# สร้างtable ด้วยภาษา SQL
+'''
+'Transection ID(transaction) TEXT',
+'Date-Time(datetime)' TEXT,
+'List'(title) TEXT,
+'Price(expense) REAL (float)',
+'Quantity(quantity)' INTEGER,
+'Total(total) REAL'
+'''
+c.execute("""CREATE TABLE IF NOT EXISTS expenselist (
+			ID INTEGER PRIMARY KEY AUTOINCREMENT,
+			transactionid TEXT,
+			datetime TEXT,
+			title TEXT,
+			expense REAL,
+			quantity INTEGER,
+			total REAL
+		)""")
+
+def insert_expense(transectionid,datetime,title,expense,quantity,total):
+	ID = None
+	with conn: #คำสั่ง close database โดยอัตโนมัติ
+		c.execute("""INSERT INTO expenselist VALUES (?,?,?,?,?,?,?)""",
+			(ID,transectionid,datetime,title,expense,quantity,total))
+		conn.commit() #การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก หรือเรียกว่าคำสั่งsaveนั่นเอง
+		print('Insert Success')
+
+######################################
+
 GUI = Tk() # สร้าง GUI ขึ้นแล้วดึงฟังก์ชันของ Tk() T capital, k lowercap
 GUI.title('Daily Budget & Expense Tracker by Bluvoyage')
 # GUI.geometry('700x620+400+100') # กำหนดขนาดของหน้าต่าง
@@ -51,8 +88,7 @@ def Donate():
 donatemenu = Menu(menubar,tearoff=0)
 menubar.add_cascade(label='Donation',menu=donatemenu)
 
-
-####################################
+################TAB1####################
 
 Tab = ttk.Notebook(GUI)
 T1 = Frame(Tab) 
@@ -85,26 +121,19 @@ def Save(event=None):
 	price = v_price.get()
 	quantity = v_quantity.get()
 
-
 	if expense == '':
 		print('No Data')
 		messagebox.showwarning('Error','Do not leave "List of Expense" blank. Please input your data.')
 		return
 	elif price == '':
-		print('No Data')
 		messagebox.showwarning('Error','Do not leave "Price" blank. Please input your data.')
 		return
 	elif quantity == '':
-		# หรือ quantity = 1 คือการตั้งค่า default ให้ quantity เท่ากับ 1 โดยอัตโนมัติ 
-		print('No Data')
-		messagebox.showwarning('Error','Do not leave "Quantity" blank. Please input your data.')
-		return
+		quantity = 1
 
-
+	total = float(price) * float(quantity)
 	try: # คือฟังก์ชันหาจุด error
 		total = float(price) * float(quantity)
-		# total = int(price) * int(quantity) คูณเลขเต็มจำนวณ ไม่มีทศนิยม
-		# total = float(price) * float(quantity) ถ้าต้องการคูณทศนิยม
 		# .get() คือดึงค่ามาจาก v_expense = StringVar()
 		print('List of Expense: {} price: {}'.format(expense,price))
 		print('Number: {} Total: {} THB'.format(quantity,total))
@@ -116,6 +145,11 @@ def Save(event=None):
 		v_price.set('')
 		v_quantity.set('')
 		# .set คือการดึง
+		
+		# # หรือ quantity = 1 คือการตั้งค่า default ให้ quantity เท่ากับ 1 โดยอัตโนมัติ 
+		# print('No Data')
+		# messagebox.showwarning('Error','Do not leave "Quantity" blank. Please input your data.')
+		# return
 
 		# บันทึกข้อมูล csv อย่าลืม import csv
 		today = datetime.now().strftime('%a') # days['Mon'] = 'จันทร์'
@@ -124,6 +158,9 @@ def Save(event=None):
 		dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
 		transectionid = stamp.strftime('%Y%m%d%H%M%f') # stamp เพื่อใช้ในการ reference
 		dt = days[today] + '-' + dt
+		# print(type(transectionid))
+		insert_expense(transectionid,dt,expense,float(price),int(quantity),total)
+
 		with open('savedata.csv','a',encoding='utf-8',newline='') as f:
 			# with คือคำสั่งเปิดไฟล์แล้วปิดอัตโนมัติ
 			# 'a' การบันทึกเรื่อยๆ เพิ่มข้อมูลต่อจากข้อมูลเก่า
@@ -135,8 +172,9 @@ def Save(event=None):
 		# ทำให้เคอเซอร์กลับไปตำแหน่งช่องกรอก E1
 		E1.focus()
 		update_table() 
-	except:
-		print('ERROR')
+	except Expection as e:
+
+		print('ERROR:',e)
 		messagebox.showerror('Error','You have entered an invalid number. Please try again.')
 		v_expense.set('')
 		v_price.set('')
@@ -175,7 +213,7 @@ E2.pack()
 #-------------------------
 
 #----------text3----------
-L = ttk.Label(F1,text='Quantity',font=FONT1).pack()
+L = ttk.Label(F1,text='Quantity(item)',font=FONT1).pack()
 v_quantity = StringVar()
 # StringVar() คือตัวแปรพิเศษสำหรับเก็บข้อมูลในGUI
 E3 = ttk.Entry(F1,textvariable=v_quantity,font=FONT1)
@@ -184,7 +222,7 @@ E3.pack()
 
 icon_b1 = PhotoImage(file='b_save.png')
 
-B2 = ttk.Button(F1,text='Save', image=icon_b1, compound='left',command=Save)
+B2 = ttk.Button(F1,text=f'{"Save":>{10}}', image=icon_b1, compound='left',command=Save)
 B2.pack(ipadx=5, ipady=5, pady=15)
 
 v_result = StringVar()
