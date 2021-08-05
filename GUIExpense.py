@@ -39,7 +39,28 @@ def insert_expense(transectionid,datetime,title,expense,quantity,total):
 		c.execute("""INSERT INTO expenselist VALUES (?,?,?,?,?,?,?)""",
 			(ID,transectionid,datetime,title,expense,quantity,total))
 		conn.commit() #การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก หรือเรียกว่าคำสั่งsaveนั่นเอง
-		print('Insert Success')
+		# print('Insert Success!')
+  
+def show_expense():
+	with conn:
+		c.execute("SELECT * FROM expenselist")
+		expense = c.fetchall() # คำสั่งให้ดึงข้อมูลเข้ามา
+		# print(expense)
+
+	return expense
+
+def update_expense(transectionid,title,expense,quantity,total):
+	with conn:
+		c.execute("""UPDATE expenselist SET title=?, expense=?, quantity=?, total=? WHERE transactionid=?""",
+			([title,expense,quantity,total,transectionid]))
+	conn.commit()
+	# print('Data Updated!')
+
+def delete_expense(transectionid):
+	with conn:
+		c.execute("DELETE FROM expenselist WHERE transactionid=(?)",((transectionid,)))
+		conn.commit()
+		# print('Data has been deleted successfully')
 
 ######################################
 
@@ -122,7 +143,7 @@ def Save(event=None):
 	quantity = v_quantity.get()
 
 	if expense == '':
-		print('No Data')
+		# print('No Data')
 		messagebox.showwarning('Error','Do not leave "List of Expense" blank. Please input your data.')
 		return
 	elif price == '':
@@ -135,8 +156,8 @@ def Save(event=None):
 	try: # คือฟังก์ชันหาจุด error
 		total = float(price) * float(quantity)
 		# .get() คือดึงค่ามาจาก v_expense = StringVar()
-		print('List of Expense: {} price: {}'.format(expense,price))
-		print('Number: {} Total: {} THB'.format(quantity,total))
+		# print('List of Expense: {} price: {}'.format(expense,price))
+		# print('Number: {} Total: {} THB'.format(quantity,total))
 		text = 'List of Expense: price:{}\n'.format(expense,price)
 		text = text + 'Quantity: {} Total: {} THB'.format(quantity,total)
 		v_result.set(text)
@@ -153,7 +174,7 @@ def Save(event=None):
 
 		# บันทึกข้อมูล csv อย่าลืม import csv
 		today = datetime.now().strftime('%a') # days['Mon'] = 'จันทร์'
-		print(today)
+		# print(today)
 		stamp = datetime.now()
 		dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
 		transectionid = stamp.strftime('%Y%m%d%H%M%f') # stamp เพื่อใช้ในการ reference
@@ -296,16 +317,23 @@ def UpdateCSV():
 	with open('savedata.csv','w',newline='',encoding='utf-8') as f: # เพิ่ม w เพื่อสั่งให้เขียนทับ
 		fw = csv.writer(f)# เตรียมข้อมูลให้กลายเป็น list
 		data = list(alltransection.values())
-		fw.writerows(data) # การเขียนแบบ multiple line from nested list บรรทัดซ้อนบรรทัด [[],[],[]]
+		fw.writerows(data) # การเขียนแบบ multiple line from nested list บรรทัดซ้อนบรรทัด [[],[],[]] ทั้งก้อน
 		print('Table was updated')
-		update_table() # เพื่อให้ข้อมูลในตารางหายไป เวลากดปุ่ม delete  
+		# update_table() # เพื่อให้ข้อมูลในตารางหายไป เวลากดปุ่ม delete
+
+def UpdateSQL():
+	data = list(alltransection.values())
+	# print('Update SQL:',data[0])
+	for d in data:
+		# transectionid,title,expense,quantity,total
+		insert_expense(d[0],d[2],d[3],d[4],d[5])
 
 def DeleteRecord(event=None):
 	check = messagebox.askyesno('Confirm?','Do you want to delete this data?')
-	print('YES/NO:',check) # ฟังก์ชันยืนยันก่อนทำการลบ
+	print('NO/YES:',check) # ฟังก์ชันยืนยันก่อนทำการลบ
 
 	if check == True:
-		print('delete')
+		# print('delete')
 		select = resulttable.selection()
 		# print(select)
 		data = resulttable.item(select)
@@ -315,14 +343,16 @@ def DeleteRecord(event=None):
 		# print(type(transectionid))
 		del alltransection[str(transectionid)] # delete data in dict
 		# print(alltransection)
-		UpdateCSV()
+		# UpdateCSV()
+		delete_expense(str(transectionid)) # deleting in DB/Data Base
 		update_table() # อัพเดทอีกครั้งเพื่อให้ข้อมูลโชว์ค่าขึ้น
 
 	else:
-		print('cancel')
+		# print('cancel')
+		pass
 
 BDelete = ttk.Button(T2,text='Delete',command=DeleteRecord)
-BDelete.place(x=50,y=490)
+BDelete.place(x=50,y=500)
 
 resulttable.bind('<Delete>',DeleteRecord) 
 
@@ -332,14 +362,16 @@ def update_table():
 	# for c in resulttable.get_children():
 	# 	resulttable.heading(header[i],text-header[i])
 	try: # ฟังก์ชันดักจับ error เวลาไม่มีข้อมูล เพื่อให้ program มัน run ได้
-		data = read_csv()
+		data = show_expense() #read_csv()
+		# print ('DATA:',data)
 		for d in data:
 			# creat transection data
-			alltransection[d[0]] = d # d[0]=transectionid
-			resulttable.insert('',0,value=d)
-		print(alltransection)
-	except: # ฟังก์ชันดักจับ error เวลาไม่มีข้อมูล เพื่อให้ program มัน run ได้
-		print('No Data')
+			alltransection[d[1]] = d[1:] # d[0]=transectionid
+			resulttable.insert('',0,value=d[1:])
+		# print('TS:',alltransection)
+	except Exception as e: # ฟังก์ชันดักจับ error เวลาไม่มีข้อมูล เพื่อให้ program มัน run ได้
+		print('No File')
+		print('ERROR:',e)
 
 #resulttable.column('Date-Time',width=10)
 #การใส่colum
@@ -350,7 +382,7 @@ def update_table():
 # resulttable.heading(header[4],text=header[4])
 
 
-###############Right Click Menu##################
+############### Right Click Menu ##################
 
 def EditRecord():
 	POPUP = Toplevel() # คล้ายกับ Tk ประกาศเพื่อเปิดหน้าต่างอีกอันหนึ่งเพื่อ edit
@@ -405,7 +437,9 @@ def EditRecord():
 		total = v2 * v3
 		newdata = [olddata[0],olddata[1],v1,v2,v3,total]
 		alltransection[str(transectionid)] = newdata
-		UpdateCSV()
+		# UpdateCSV()
+		UpdateSQL()
+		# update_expense(olddata[0],olddata[1],v1,v2,v3,total) # sigle record updating
 		update_table() # อัพเดทอีกครั้งเพื่อให้ข้อมูลโชว์ค่าขึ้น
 		POPUP.destroy() # สั่งปิดPOPUPเมื่อใ ช้งาน/editเสร็จ
 
@@ -416,13 +450,12 @@ def EditRecord():
 
 	# get data in selected record
 	select = resulttable.selection()
-	print(select)
+	# print(select)
 	data = resulttable.item(select)
 	data = data['values']
-	print(data)
+	# print(data)
 	transectionid = data[0]
-
-	# for showing old data
+		# for showing old data สั่งเซ็ตค่าเก่าไว้ตรงช่องกรอก
 	v_expense.set(data[2])
 	v_price.set(data[3])
 	v_quantity.set(data[4])
@@ -443,7 +476,8 @@ resulttable.bind('<Button-2>', menupopup)
 
 
 update_table()
-print('GET CHILD:',resulttable.get_children())
+# UpdateSQL()
+# print('GET CHILD:',resulttable.get_children())
 GUI.bind('<Tab>', lambda x: E2.focus())
 GUI.mainloop() # เพื่อให้โปรแกรม run ตลอดเวลา
 

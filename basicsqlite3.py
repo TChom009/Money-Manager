@@ -49,21 +49,19 @@ def update_expense(transectionid,title,expense,quantity,total):
 	conn.commit()
 	print('Data Updated!')
 
-# def delete_expense(transectionid):
-# 	with conn:
-# 		c.execute("DELETE FROM expenselist WHERE transactionid=?",([transectionid]))
-# 	conn.commit()
-# 	print('Data has been deleted successfully')
+def delete_expense(transectionid):
+	with conn:
+		c.execute("DELETE FROM expenselist WHERE transactionid=(?)",((transectionid,)))
+		conn.commit()
+		print('Data has been deleted successfully')
 
-# insert_expense('49374994902','Saturday 2021-08-01','Hotel',5000,7,35000)
-# update_expense('49374994395','Brakfast',250,2,500)
-# delete_expense('49374994396')
-show_expense()
+#  สรุปการเขียนโปรแกรมโดยการสร้าง 4 ฟังก์ชัน C.R.U.D. ด้วย Python GUI ที่ใช้ Tkinter
+# insert_expense('49374994902','Saturday 2021-08-01','Hotel',5000,7,35000) # C--CREATE
+# show_expense() # R--READ โดยใช้ SQL
+# update_expense('49374994902','Brakfast',250,2,500) # U--UPDATE
+# delete_expense('49374994902') # D--DELETE
 
-
-
-
-print('Success!')
+print('Success')
 
 
 
